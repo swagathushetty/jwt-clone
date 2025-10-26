@@ -56,6 +56,20 @@ class MiniJWT {
       signature: signatureB64
     };
   }
+
+  createSignature(headerB64, payloadB64) {
+    const data = `${headerB64}.${payloadB64}`;
+
+    const signature = crypto
+      .createHmac('sha256', this.secret)  
+      .update(data)
+      .digest('base64');
+
+      return signature
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+  }
 }
 
 module.exports = MiniJWT;
