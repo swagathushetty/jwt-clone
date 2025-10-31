@@ -97,7 +97,7 @@ class MiniJWT {
     return value * multipliers[unit];
   }
 
-   sign(payload, options = {}) {
+  sign(payload, options = {}) {
     console.log('\nSigning JWT token...');
 
     const header = {
@@ -145,6 +145,48 @@ class MiniJWT {
       payload: JSON.parse(this.base64UrlDecode(payloadB64)),
       signature: signatureB64
     };
+  }
+
+  verify(token) {
+    console.log('\nVerifying token...');
+
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Invalid JWT format');
+    }
+
+    const [headerB64, payloadB64, providedSignature] = parts;
+
+    // Step 2: Recalculate signature
+    const expectedSignature = this.createSignature(headerB64, payloadB64);
+    console.log('Expected signature:', expectedSignature.substring(0, 20) + '...');
+    console.log('Provided signature:', providedSignature.substring(0, 20) + '...');
+
+    if (expectedSignature !== providedSignature) {
+      console.log('Signature mismatch!');
+      throw new Error('Invalid signature');
+    }
+    console.log('Signature valid');
+
+    const payload = JSON.parse(this.base64UrlDecode(payloadB64));
+
+    if (payload.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      console.log('Current time:', now);
+      console.log('Expiration:', payload.exp);
+
+      if (now >= payload.exp) {
+        const expired = now - payload.exp;
+        console.log(`Token expired ${expired} seconds ago`);
+        throw new Error('Token expired');
+      }
+
+      const remaining = payload.exp - now;
+      console.log(`Token valid for ${remaining} more seconds`);
+    }
+
+    console.log('Token verified successfully!');
+    return payload;
   }
 
 }
