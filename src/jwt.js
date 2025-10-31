@@ -43,12 +43,8 @@ class MiniJWT {
     const [headerB64, payloadB64, signatureB64] = parts;
 
     const header = JSON.parse(this.base64UrlDecode(headerB64));
-    console.log('Header:', header);
 
     const payload = JSON.parse(this.base64UrlDecode(payloadB64));
-    console.log('Payload:', payload);
-
-    console.log('Signature:', signatureB64.substring(0, 20) + '...');
 
     return {
       header,
@@ -98,8 +94,6 @@ class MiniJWT {
   }
 
   sign(payload, options = {}) {
-    console.log('\nSigning JWT token...');
-
     const header = {
       alg: 'HS256',
       typ: 'JWT'
@@ -114,10 +108,7 @@ class MiniJWT {
     if (options.expiresIn) {
       const expiresInSeconds = this.parseExpiresIn(options.expiresIn);
       claims.exp = now + expiresInSeconds;
-      console.log(`Expiration: ${options.expiresIn} (${new Date(claims.exp * 1000)})`);
     }
-
-    console.log('Payload:', claims);
 
     const headerB64 = this.base64UrlEncode(JSON.stringify(header));
     const payloadB64 = this.base64UrlEncode(JSON.stringify(claims));
@@ -125,9 +116,6 @@ class MiniJWT {
     const signature = this.createSignature(headerB64, payloadB64);
 
     const token = `${headerB64}.${payloadB64}.${signature}`;
-
-    console.log('Token created!');
-    console.log('Signature:', signature.substring(0, 20) + '...');
 
     return token;
   }
@@ -148,8 +136,6 @@ class MiniJWT {
   }
 
   verify(token) {
-    console.log('\nVerifying token...');
-
     const parts = token.split('.');
     if (parts.length !== 3) {
       throw new Error('Invalid JWT format');
@@ -159,33 +145,21 @@ class MiniJWT {
 
     // Step 2: Recalculate signature
     const expectedSignature = this.createSignature(headerB64, payloadB64);
-    console.log('Expected signature:', expectedSignature.substring(0, 20) + '...');
-    console.log('Provided signature:', providedSignature.substring(0, 20) + '...');
 
     if (expectedSignature !== providedSignature) {
-      console.log('Signature mismatch!');
       throw new Error('Invalid signature');
     }
-    console.log('Signature valid');
 
     const payload = JSON.parse(this.base64UrlDecode(payloadB64));
 
     if (payload.exp) {
       const now = Math.floor(Date.now() / 1000);
-      console.log('Current time:', now);
-      console.log('Expiration:', payload.exp);
 
       if (now >= payload.exp) {
-        const expired = now - payload.exp;
-        console.log(`Token expired ${expired} seconds ago`);
         throw new Error('Token expired');
       }
-
-      const remaining = payload.exp - now;
-      console.log(`Token valid for ${remaining} more seconds`);
     }
 
-    console.log('Token verified successfully!');
     return payload;
   }
 
